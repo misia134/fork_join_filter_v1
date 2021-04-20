@@ -5,29 +5,33 @@ import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 
 public class RecursiveActionFilter extends RecursiveAction {
-	private final int threshold = 1000000; //wstêpny próg
-	private Mat image;
+	private final int threshold = 100000; //prÃ³g
+	private Mat original;
+	private Mat filtered; 
 	
-	public RecursiveActionFilter(Mat sourceImage) {
-		image = sourceImage;
-	}
+	public RecursiveActionFilter(Mat sourceImage, Mat targetImage) {
+		original = sourceImage;
+		filtered = targetImage;
+	}	
 	
 	@Override
 	protected void compute() {
-		if(measure() < threshold) {
-			Imgproc.bilateralFilter(image,image,9,75,75); //wstêpne wartoœci			
+		if(measure() < threshold) {			
+			Imgproc.bilateralFilter(original,filtered,9,75,75); //parametry filtrowania					
 		}
 		else {
-			RecursiveActionFilter leftFilter = new RecursiveActionFilter(image.submat(new Range(0,image.rows()),new Range(0,image.cols()/2))); 
-			RecursiveActionFilter rightFilter = new RecursiveActionFilter(image.submat(new Range(0,image.rows()),new Range(image.cols()/2,image.cols())));
+			RecursiveActionFilter leftFilter = new RecursiveActionFilter(original.submat(new Range(0,original.rows()),new Range(0,original.cols()/2)),filtered.submat(new Range(0,filtered.rows()),new Range(0,filtered.cols()/2))); 
+			RecursiveActionFilter rightFilter = new RecursiveActionFilter(original.submat(new Range(0,original.rows()),new Range(original.cols()/2,original.cols())),filtered.submat(new Range(0,filtered.rows()),new Range(filtered.cols()/2,filtered.cols())));
 			
 			leftFilter.fork();
+			
 			rightFilter.compute();
-			leftFilter.join();			
+						
+			leftFilter.join();						
 		}
 	}
 	
 	private int measure() {
-		return image.rows()*image.cols();
+		return original.rows()*original.cols();
 	}
 }
