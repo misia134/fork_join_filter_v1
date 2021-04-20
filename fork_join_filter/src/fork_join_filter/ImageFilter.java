@@ -9,15 +9,18 @@ public class ImageFilter {
 	public static void main(String[] args) {
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 		
-		Mat image = Imgcodecs.imread("sunflowers.jpg",Imgcodecs.IMREAD_UNCHANGED);
+		Mat original = Imgcodecs.imread("sunflowers.jpg",Imgcodecs.IMREAD_UNCHANGED);
+		Mat filtered = original.clone();
 		
-		HighGui.imshow("Window 1",image);		
+		HighGui.imshow("Original image",original);		
 		
-		final int numberOfProcessors = Runtime.getRuntime().availableProcessors();
-        final ForkJoinPool forkJoinPool = new ForkJoinPool(numberOfProcessors);
+		final ForkJoinPool forkJoinPool = ForkJoinPool.commonPool();
 
-        forkJoinPool.submit(new RecursiveActionFilter(image));
-        
-        HighGui.imshow("Filtered image",image);
+		RecursiveActionFilter recFilter = new RecursiveActionFilter(original,filtered);
+		forkJoinPool.submit(recFilter);
+		recFilter.join();
+		        
+        	HighGui.imshow("Filtered image",filtered);
+        	HighGui.waitKey();
 	}
 }
