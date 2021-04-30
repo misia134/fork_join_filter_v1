@@ -14,7 +14,7 @@ public class RecursiveActionFilter extends RecursiveAction {
 	private List<Mat> rgb;
 	private Mat r,g,b;
 	private int kernelSum;
-	
+		
 	public RecursiveActionFilter(Mat sourceImage, Mat targetImage) {
 		original = sourceImage;
 		filtered = targetImage;
@@ -26,8 +26,10 @@ public class RecursiveActionFilter extends RecursiveAction {
 					kernel.put(i,j,2);
 				}
 				else {
-					kernel.put(i,j,4);
-				}				
+					if(i==1) {
+						kernel.put(i,j,4);
+					}
+				}
 			}
 		}	
 		kernelSum = 16;
@@ -35,8 +37,7 @@ public class RecursiveActionFilter extends RecursiveAction {
 	
 	@Override
 	protected void compute() {
-		if(measure() < threshold) {			
-			//Imgproc.bilateralFilter(original,filtered,9,75,75); //parametry filtrowania	
+		if(measure() < threshold) {
 			Core.split(original,rgb);
 			r = rgb.get(2);
 			g = rgb.get(1);
@@ -48,10 +49,18 @@ public class RecursiveActionFilter extends RecursiveAction {
 					b.put(i,j,sum(b,i,j)/kernelSum);
 				}
 			}
+			for(int i=1;i<original.rows()-1;i++) {				
+				r.put(i,0,(r.get(i-1,1)[0]*2+r.get(i,1)[0]*4+r.get(i+1,1)[0]*2)/7.75);
+				r.put(i,original.cols()-1,(r.get(i-1,original.cols()-2)[0]*2+r.get(i,original.cols()-2)[0]*4+r.get(i+1,original.cols()-2)[0]*2)/7.75);
+				g.put(i,0,(g.get(i-1,1)[0]*2+g.get(i,1)[0]*4+g.get(i+1,1)[0]*2)/7.75);
+				g.put(i,original.cols()-1,(g.get(i-1,original.cols()-2)[0]*2+g.get(i,original.cols()-2)[0]*4+g.get(i+1,original.cols()-2)[0]*2)/7.75);
+				b.put(i,0,(b.get(i-1,1)[0]*2+b.get(i,1)[0]*4+b.get(i+1,1)[0]*2)/7.75);
+				b.put(i,original.cols()-1,(b.get(i-1,original.cols()-2)[0]*2+b.get(i,original.cols()-2)[0]*4+b.get(i+1,original.cols()-2)[0]*2)/7.75);
+			}
 			rgb.set(2,r);
 			rgb.set(1,g);
 			rgb.set(0,b);
-			Core.merge(rgb,filtered);					
+			Core.merge(rgb,filtered);
 		}
 		else {
 			RecursiveActionFilter leftFilter = new RecursiveActionFilter(original.submat(new Range(0,original.rows()),new Range(0,original.cols()/2)),filtered.submat(new Range(0,filtered.rows()),new Range(0,filtered.cols()/2))); 
